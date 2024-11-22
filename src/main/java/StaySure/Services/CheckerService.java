@@ -3,8 +3,12 @@ package StaySure.Services;
 import StaySure.Repositories.DTO.CheckerDTO;
 import StaySure.Repositories.Entitys.Checker;
 import StaySure.Repositories.Mappers.CheckerMapper;
+
+import org.springframework.stereotype.Service;
+
 import StaySure.Repositories.DAO.CheckerDao;
 
+@Service
 public class CheckerService {
     private CheckerDao dao;
 

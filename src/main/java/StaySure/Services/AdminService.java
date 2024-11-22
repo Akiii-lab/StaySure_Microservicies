@@ -3,8 +3,12 @@ package StaySure.Services;
 import StaySure.Repositories.DTO.AdminDTO;
 import StaySure.Repositories.Entitys.Admin;
 import StaySure.Repositories.Mappers.AdminMapper;
+
+import org.springframework.stereotype.Service;
+
 import StaySure.Repositories.DAO.AdminDao;
 
+@Service
 public class AdminService {
     private AdminDao dao;
 
