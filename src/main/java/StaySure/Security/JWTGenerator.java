@@ -22,7 +22,7 @@ public class JWTGenerator {
     @Value("${jwt.secretKey}")
     private String secretKeyString;
     private SecretKey key;
-    public static final long JWT_EXPIRATION = 3600000;
+    public static final long JWT_EXPIRATION = 86400000; // 24 hour = 86400000
 	
     @PostConstruct
     public void init() {

@@ -2,20 +2,34 @@ package StaySure.Repositories.DAO;
 
 import StaySure.Repositories.Entitys.User;
 import StaySure.DataBase.DatabaseConfig;
+import StaySure.DataBase.QueryParam;
+
 import java.sql.ResultSet;
+import java.util.ArrayList;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import StaySure.Repositories.Entitys.Factories.UserFactory;
 
+@Component
 public class UserDao implements DaoBase<User> {
+    @Autowired
     private final DatabaseConfig databaseConfig;
     private final String tableName = "users";
     private final String params = "name, last_name, phone, email, identification_number, birth_date, notification_enabled, password";
 
-    private String getUserParams(User user) {
-        String res = "";
+    private ArrayList<QueryParam> getUserParams(User user) {
+        ArrayList<QueryParam> res = new ArrayList<>();
 
-        res += "'" + user.getName() + "', '" + user.getLastName() + "', '" +
-                user.getPhone() + "', '" + user.getEmail() + "', '" + user.getIdentificationNumber() + "', '"
-                + user.getBirthDate() + "', '" + user.isNotificationsEnabled() + "', '" + user.getPassword() + "'";
+        res.add(new QueryParam("string", user.getName()));
+        res.add(new QueryParam("string", user.getLastName()));
+        res.add(new QueryParam("long", user.getPhone()));
+        res.add(new QueryParam("string", user.getEmail()));
+        res.add(new QueryParam("int", user.getIdentificationNumber()));
+        res.add(new QueryParam("date", user.getBirthDate()));
+        res.add(new QueryParam("boolean", user.isNotificationsEnabled()));
+        res.add(new QueryParam("string", user.getPassword()));
 
         return res;
     }
@@ -33,29 +47,38 @@ public class UserDao implements DaoBase<User> {
                     res.getBoolean("notification_enabled"),
                     res.getString("password"));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }
 
-    public UserDao() {
-        this.databaseConfig = new DatabaseConfig();
+    public UserDao(DatabaseConfig databaseConfig) {
+        this.databaseConfig = databaseConfig;
     }
 
     @Override
     public User save(User user) {
 
         try {
+            String paramToPrepare = "";
+            for (int i = 0; i < params.split(", ").length; i++) {
+                if (i == 0) {
+                    paramToPrepare += "?";
+                } else {
+                    paramToPrepare += ", ?";
+                }
+            }
             long res = databaseConfig
                     .executeUpdate(
-                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + getUserParams(user) + ")");
+                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + paramToPrepare + ")",
+                            getUserParams(user).toArray(new QueryParam[0]));
             if (res > 0) {
                 User resUser = user;
                 resUser.setId(res);
                 return resUser;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
         return null;
@@ -65,26 +88,27 @@ public class UserDao implements DaoBase<User> {
     public User update(User user) {
         try {
             String paramsSplited[] = params.split(", ");
-            String valuesSplited[] = getUserParams(user).split(", ");
+            ArrayList<QueryParam> valuesSplited = getUserParams(user);
             String query = "";
             query += "UPDATE " + tableName + " SET ";
             for (int i = 0; i < paramsSplited.length; i++) {
                 if (i == 0) {
-                    query += paramsSplited[i] + " = '" + valuesSplited[i] + "'";
+                    query += paramsSplited[i] + " = ?";
                 } else {
-                    query += ", " + paramsSplited[i] + " = '" + valuesSplited[i] + "'";
+                    query += ", " + paramsSplited[i] + " = ?";
                 }
             }
-            query += " WHERE id = " + user.getId();
+            valuesSplited.add(new QueryParam("long", user.getId()));
+            query += " WHERE id = ? ";
             long res = databaseConfig
-                    .executeUpdate(query);
+                    .executeUpdate(query, valuesSplited.toArray(new QueryParam[0]));
             if (res > 0) {
                 User resUser = user;
                 resUser.setId(res);
                 return resUser;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }
@@ -92,11 +116,11 @@ public class UserDao implements DaoBase<User> {
     @Override
     public boolean delete(Long id) {
         try {
-            long res =  databaseConfig
-                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = " + id);
+            long res = databaseConfig
+                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
             return res > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return false;
     }
@@ -104,12 +128,12 @@ public class UserDao implements DaoBase<User> {
     public User findByEmail(String email) {
         try {
             ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = '" + email + "'", User.class);
+                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = ?", new QueryParam("string", email));
             if (res.next()) {
                 return getUser(res);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }
@@ -118,12 +142,12 @@ public class UserDao implements DaoBase<User> {
     public User findById(Long id) {
         try {
             ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = " + id, User.class);
+                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
             if (res.next()) {
                 return getUser(res);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }

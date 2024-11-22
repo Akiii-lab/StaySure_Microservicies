@@ -12,20 +12,23 @@ import java.sql.SQLException;
 @Component
 public class DatabaseConfig {
 
-    @Value("${spring.datasource.url}")
     private String url;
-
-    @Value("${spring.datasource.username}")
     private String username;
-
-    @Value("${spring.datasource.password}")
     private String password;
+    private String driver;
 
     // Instancia única de la conexión (Singleton)
     private static Connection instance;
 
-    public DatabaseConfig() {
-        // springboot inyecta los valores
+    public DatabaseConfig(@Value("${spring.datasource.url}") String url,
+            @Value("${spring.datasource.username}") String username,
+            @Value("${spring.datasource.password}") String password,
+            @Value("${spring.datasource.driver-class-name}") String driver) throws ClassNotFoundException {
+        this.username = username;
+        this.password = password;
+        this.url = url;
+        this.driver = driver;
+        Class.forName(driver);
     }
 
     /**
@@ -36,9 +39,25 @@ public class DatabaseConfig {
     public static synchronized Connection getInstance(DatabaseConfig config) throws SQLException {
         if (instance == null || instance.isClosed()) {
             instance = DriverManager.getConnection(config.url, config.username, config.password);
-            System.out.println("Conexión exitosa a PostgreSQL.");
+            System.out.println("Conexión exitosa a la base de datos: " + config.url + " con el driver: " + config.driver);
         }
         return instance;
+    }
+
+    private void prepareStatement(PreparedStatement statement, QueryParam... params) throws SQLException {
+        for (int i = 0; i < params.length; i++) {
+            if (params[i].object_class.equals("string")) {
+                statement.setString(i + 1, (String) params[i].param_string);
+            } else if (params[i].object_class.equals("int")) {
+                statement.setInt(i + 1, (int) params[i].param_int);
+            } else if (params[i].object_class.equals("long")) {
+                statement.setLong(i + 1, (long) params[i].param_long);
+            } else if (params[i].object_class.equals("boolean")) {
+                statement.setBoolean(i + 1, (boolean) params[i].param_boolean);
+            } else if (params[i].object_class.equals("date")) {
+                statement.setDate(i + 1, new java.sql.Date(params[i].param_date.getTime()));
+            }
+        }
     }
 
     /**
@@ -49,11 +68,10 @@ public class DatabaseConfig {
      * @return el ResultSet con los resultados.
      * @throws SQLException si ocurre un error al ejecutar la consulta.
      */
-    public ResultSet executeQuery(String query, Object... params) throws SQLException {
+    public ResultSet executeQuery(String query, QueryParam... params) throws SQLException {
         PreparedStatement statement = getInstance(this).prepareStatement(query);
-        for (int i = 0; i < params.length; i++) {
-            statement.setObject(i + 1, params[i]);
-        }
+        prepareStatement(statement, params);
+        System.out.println("Ejecutando consulta: " + statement.toString());
         return statement.executeQuery();
     }
 
@@ -65,13 +83,12 @@ public class DatabaseConfig {
      * @return el número de filas afectadas o la id si es una operación INSERT.
      * @throws SQLException si ocurre un error al ejecutar la consulta.
      */
-    public long executeUpdate(String query, Object... params) throws SQLException {
-        PreparedStatement statement = getInstance(this).prepareStatement(query);
-        for (int i = 0; i < params.length; i++) {
-            statement.setObject(i + 1, params[i]);
-        }
-        int rowsAffected = statement.executeUpdate();
+    public long executeUpdate(String query, QueryParam... params) throws SQLException {
 
+        PreparedStatement statement = getInstance(this).prepareStatement(query);
+        prepareStatement(statement, params);
+        System.out.println("Ejecutando consulta: " + statement.toString());
+        int rowsAffected = statement.executeUpdate();
         if (rowsAffected > 0 && query.toLowerCase().startsWith("insert")) {
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {

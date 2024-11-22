@@ -1,5 +1,6 @@
 package StaySure.Services;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import StaySure.Repositories.DTO.UserDTO;
 import StaySure.Repositories.Entitys.User;
@@ -8,10 +9,11 @@ import StaySure.Repositories.DAO.UserDao;
 
 @Service
 public class UserService {
+    @Autowired
     private UserDao dao;
 
-    public UserService() {
-        this.dao = new UserDao();
+    public UserService(UserDao dao) {
+        this.dao = dao;
     }
 
     public UserDTO createUser(UserDTO new_userdto) {

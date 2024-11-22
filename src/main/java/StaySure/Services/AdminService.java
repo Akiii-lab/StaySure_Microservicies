@@ -4,16 +4,18 @@ import StaySure.Repositories.DTO.AdminDTO;
 import StaySure.Repositories.Entitys.Admin;
 import StaySure.Repositories.Mappers.AdminMapper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import StaySure.Repositories.DAO.AdminDao;
 
 @Service
 public class AdminService {
+    @Autowired
     private AdminDao dao;
 
-    public AdminService() {
-        this.dao = new AdminDao();
+    public AdminService(AdminDao dao) {
+        this.dao = dao;
     }
 
     public AdminDTO createAdmin(AdminDTO admin) {

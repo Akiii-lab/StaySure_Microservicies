@@ -49,10 +49,10 @@ public class AuthController {
         user.password = (encryptedPassword);
         UserDTO res = userService.createUser(user);
         if (res == null) {
-            response.put("error", "Error creating customer");
+            response.put("error", "Error creating user");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        response.put("data", "Customer created");
+        response.put("data", "User created");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -64,25 +64,25 @@ public class AuthController {
         user.password = (encryptedPassword);
         LesseDTO res = lesseService.createLesse(user);
         if (res == null) {
-            response.put("error", "Error creating customer");
+            response.put("error", "Error creating lesse");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        response.put("data", "Customer created");
+        response.put("data", "Lesse created");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/checker/register")
     public ResponseEntity<HashMap<String, Object>> createChecker(@RequestBody CheckerDTO user) {
-        System.out.println("Creating user");
+        System.out.println("Creating checker");
         HashMap<String, Object> response = new HashMap<>();
         String encryptedPassword = passwordEncoder.encode(user.password);
         user.password = (encryptedPassword);
         CheckerDTO res = checkerService.createChecker(user);
         if (res == null) {
-            response.put("error", "Error creating customer");
+            response.put("error", "Error creating checker");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        response.put("data", "Customer created");
+        response.put("data", "Checker created");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

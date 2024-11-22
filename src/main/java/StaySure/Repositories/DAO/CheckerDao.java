@@ -2,20 +2,34 @@ package StaySure.Repositories.DAO;
 
 import StaySure.Repositories.Entitys.Checker;
 import StaySure.DataBase.DatabaseConfig;
+import StaySure.DataBase.QueryParam;
+
 import java.sql.ResultSet;
+import java.util.ArrayList;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import StaySure.Repositories.Entitys.Factories.CheckerFactory;
 
+@Component
 public class CheckerDao implements DaoBase<Checker> {
+    @Autowired
     private final DatabaseConfig databaseConfig;
     private final String tableName = "checkers";
     private final String params = "name, last_name, phone, email, identification_number, birth_date, start_to_checker, password";
 
-    private String getUserParams(Checker checker) {
-        String res = "";
+    private ArrayList<QueryParam> getUserParams(Checker checker) {
+        ArrayList<QueryParam> res = new ArrayList<>();
 
-        res += "'" + checker.getName() + "', '" + checker.getLastName() + "', '" +
-                checker.getPhone() + "', '" + checker.getEmail() + "', '" + checker.getIdentificationNumber() + "', '"
-                + checker.getBirthDate() + "', '" + checker.getStartToChecker() + "', '" + checker.getPassword() + "'";
+        res.add(new QueryParam("string", checker.getName()));
+        res.add(new QueryParam("string", checker.getLastName()));
+        res.add(new QueryParam("long", checker.getPhone()));
+        res.add(new QueryParam("string", checker.getEmail()));
+        res.add(new QueryParam("int", checker.getIdentificationNumber()));
+        res.add(new QueryParam("date", checker.getBirthDate()));
+        res.add(new QueryParam("date", checker.getStartToChecker()));
+        res.add(new QueryParam("string", checker.getPassword()));
 
         return res;
     }
@@ -33,29 +47,38 @@ public class CheckerDao implements DaoBase<Checker> {
                     res.getString("password"),
                     res.getDate("start_to_checker"));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }
 
-    public CheckerDao() {
-        this.databaseConfig = new DatabaseConfig();
+    public CheckerDao(DatabaseConfig databaseConfig) {
+        this.databaseConfig = databaseConfig;
     }
 
     @Override
     public Checker save(Checker checker) {
 
         try {
+            String paramToPrepare = "";
+            for (int i = 0; i < params.split(", ").length; i++) {
+                if (i == 0) {
+                    paramToPrepare += "?";
+                } else {
+                    paramToPrepare += ", ?";
+                }
+            }
             long res = databaseConfig
                     .executeUpdate(
-                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + getUserParams(checker) + ")");
+                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + paramToPrepare + ")",
+                            getUserParams(checker).toArray(new QueryParam[0]));
             if (res > 0) {
                 Checker resUser = checker;
                 resUser.setId(res);
                 return resUser;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
         return null;
@@ -65,24 +88,25 @@ public class CheckerDao implements DaoBase<Checker> {
     public Checker update(Checker checker) {
         try {
             String paramsSplited[] = params.split(", ");
-            String valuesSplited[] = getUserParams(checker).split(", ");
+            ArrayList<QueryParam> valuesSplited = getUserParams(checker);
             String query = "";
             query += "UPDATE " + tableName + " SET ";
             for (int i = 0; i < paramsSplited.length; i++) {
                 if (i == 0) {
-                    query += paramsSplited[i] + " = '" + valuesSplited[i] + "'";
+                    query += paramsSplited[i] + " = ?";
                 } else {
-                    query += ", " + paramsSplited[i] + " = '" + valuesSplited[i] + "'";
+                    query += ", " + paramsSplited[i] + " = ?";
                 }
             }
-            query += " WHERE id = " + checker.getId();
+            valuesSplited.add(new QueryParam("long", checker.getId()));
+            query += " WHERE id = ? ";
             long res = databaseConfig
-                    .executeUpdate(query);
+                    .executeUpdate(query, valuesSplited.toArray(new QueryParam[0]));
             if (res > 0) {
                 return checker;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }
@@ -91,10 +115,10 @@ public class CheckerDao implements DaoBase<Checker> {
     public boolean delete(Long id) {
         try {
             long res = databaseConfig
-                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = " + id);
+                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
             return res > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return false;
     }
@@ -102,12 +126,12 @@ public class CheckerDao implements DaoBase<Checker> {
     public Checker findByEmail(String email) {
         try {
             ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = '" + email + "'", Checker.class);
+                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = ?", new QueryParam("string", email));
             if (res.next()) {
                 return getChecker(res);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }
@@ -116,12 +140,12 @@ public class CheckerDao implements DaoBase<Checker> {
     public Checker findById(Long id) {
         try {
             ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = " + id, Checker.class);
+                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
             if (res.next()) {
                 return getChecker(res);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
         return null;
     }

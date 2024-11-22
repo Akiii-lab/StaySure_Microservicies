@@ -4,16 +4,18 @@ import StaySure.Repositories.DTO.CheckerDTO;
 import StaySure.Repositories.Entitys.Checker;
 import StaySure.Repositories.Mappers.CheckerMapper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import StaySure.Repositories.DAO.CheckerDao;
 
 @Service
 public class CheckerService {
+    @Autowired
     private CheckerDao dao;
 
-    public CheckerService() {
-        this.dao = new CheckerDao();
+    public CheckerService(CheckerDao dao) {
+        this.dao = dao;
     }
 
     public CheckerDTO createChecker(CheckerDTO checker) {

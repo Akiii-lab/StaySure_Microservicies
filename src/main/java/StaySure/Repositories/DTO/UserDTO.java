@@ -27,4 +27,20 @@ public class UserDTO {
         this.notificationsEnabled = notificationsEnabled;
     }
 
+    /*
+     * json example
+     * 
+     * {
+     * "id": 1,
+     * "name": "John",
+     * "lastName": "Doe",
+     * "phone": 123456789,
+     * "email": "jv3iO@example.com",
+     * "identificationNumber": 123456789,
+     * "birthDate": "1990-01-01",
+     * "password": "password",
+     * "notificationsEnabled": true
+     * }
+     */
+
 }

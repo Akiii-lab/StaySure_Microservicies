@@ -1,5 +1,6 @@
 package StaySure.Services;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import StaySure.Repositories.DTO.LesseDTO;
@@ -9,10 +10,11 @@ import StaySure.Repositories.DAO.LesseDao;
 
 @Service
 public class LesseService {
+    @Autowired
     private LesseDao dao;
 
-    public LesseService() {
-        this.dao = new LesseDao();
+    public LesseService(LesseDao dao) {
+        this.dao = dao;
     }
 
     public LesseDTO createLesse(LesseDTO lesse) {
