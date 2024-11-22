@@ -19,7 +19,7 @@ public class LesseDao implements DaoBase<Lesse> {
     private final String tableName = "lesses";
     private final String params = "name, last_name, phone, email, identification_number, birth_date, nit_lesse, password";
 
-    private ArrayList<QueryParam> getUserParams(Lesse lesse) {
+    private ArrayList<QueryParam> getDataParams(Lesse lesse) {
         ArrayList<QueryParam> res = new ArrayList<>();
 
         res.add(new QueryParam("string", lesse.getName()));
@@ -34,7 +34,7 @@ public class LesseDao implements DaoBase<Lesse> {
         return res;
     }
 
-    private Lesse getLesse(ResultSet res) {
+    private Lesse getData(ResultSet res) {
         try {
             return LesseFactory.createLesse(
                     res.getLong("id"),
@@ -57,25 +57,15 @@ public class LesseDao implements DaoBase<Lesse> {
     }
 
     @Override
-    public Lesse save(Lesse lesse) {
+    public Lesse save(Lesse data) {
 
         try {
-            String paramToPrepare = "";
-            for (int i = 0; i < params.split(", ").length; i++) {
-                if (i == 0) {
-                    paramToPrepare += "?";
-                } else {
-                    paramToPrepare += ", ?";
-                }
-            }
-            long res = databaseConfig
-                    .executeUpdate(
-                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + paramToPrepare + ")",
-                            getUserParams(lesse).toArray(new QueryParam[0]));
+            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]),
+                    tableName, params);
             if (res > 0) {
-                Lesse resUser = lesse;
-                resUser.setId(res);
-                return resUser;
+                Lesse resData = data;
+                resData.setId(res);
+                return resData;
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -85,25 +75,12 @@ public class LesseDao implements DaoBase<Lesse> {
     }
 
     @Override
-    public Lesse update(Lesse lesse) {
+    public Lesse update(Lesse data) {
         try {
-            String paramsSplited[] = params.split(", ");
-            ArrayList<QueryParam> valuesSplited = getUserParams(lesse);
-            String query = "";
-            query += "UPDATE " + tableName + " SET ";
-            for (int i = 0; i < paramsSplited.length; i++) {
-                if (i == 0) {
-                    query += paramsSplited[i] + " = ?";
-                } else {
-                    query += ", " + paramsSplited[i] + " = ?";
-                }
-            }
-            valuesSplited.add(new QueryParam("long", lesse.getId()));
-            query += " WHERE id = ? ";
-            long res = databaseConfig
-                    .executeUpdate(query, valuesSplited.toArray(new QueryParam[0]));
+            long res = new DaoUtils().update(databaseConfig, getDataParams(data), tableName, params,
+                    data.getId());
             if (res > 0) {
-                return lesse;
+                return findById(data.getId());
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -114,8 +91,7 @@ public class LesseDao implements DaoBase<Lesse> {
     @Override
     public boolean delete(Long id) {
         try {
-            long res = databaseConfig
-                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
+            long res = new DaoUtils().detele(databaseConfig, tableName, id);
             return res > 0;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -125,10 +101,9 @@ public class LesseDao implements DaoBase<Lesse> {
 
     public Lesse findByEmail(String email) {
         try {
-            ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = ?", new QueryParam("string", email));
+            ResultSet res = new DaoUtils().getByStringColumn(databaseConfig, tableName, "email", email);
             if (res.next()) {
-                return getLesse(res);
+                return getData(res);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -139,10 +114,9 @@ public class LesseDao implements DaoBase<Lesse> {
     @Override
     public Lesse findById(Long id) {
         try {
-            ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
+            ResultSet res = new DaoUtils().getByID(databaseConfig, tableName, id);
             if (res.next()) {
-                return getLesse(res);
+                return getData(res);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());

@@ -19,22 +19,22 @@ public class UserDao implements DaoBase<User> {
     private final String tableName = "users";
     private final String params = "name, last_name, phone, email, identification_number, birth_date, notification_enabled, password";
 
-    private ArrayList<QueryParam> getUserParams(User user) {
+    private ArrayList<QueryParam> getDataParams(User data) {
         ArrayList<QueryParam> res = new ArrayList<>();
 
-        res.add(new QueryParam("string", user.getName()));
-        res.add(new QueryParam("string", user.getLastName()));
-        res.add(new QueryParam("long", user.getPhone()));
-        res.add(new QueryParam("string", user.getEmail()));
-        res.add(new QueryParam("int", user.getIdentificationNumber()));
-        res.add(new QueryParam("date", user.getBirthDate()));
-        res.add(new QueryParam("boolean", user.isNotificationsEnabled()));
-        res.add(new QueryParam("string", user.getPassword()));
+        res.add(new QueryParam("string", data.getName()));
+        res.add(new QueryParam("string", data.getLastName()));
+        res.add(new QueryParam("long", data.getPhone()));
+        res.add(new QueryParam("string", data.getEmail()));
+        res.add(new QueryParam("int", data.getIdentificationNumber()));
+        res.add(new QueryParam("date", data.getBirthDate()));
+        res.add(new QueryParam("boolean", data.isNotificationsEnabled()));
+        res.add(new QueryParam("string", data.getPassword()));
 
         return res;
     }
 
-    private User getUser(ResultSet res) {
+    private User getData(ResultSet res) {
         try {
             return UserFactory.createUser(
                     res.getLong("id"),
@@ -57,25 +57,15 @@ public class UserDao implements DaoBase<User> {
     }
 
     @Override
-    public User save(User user) {
+    public User save(User data) {
 
         try {
-            String paramToPrepare = "";
-            for (int i = 0; i < params.split(", ").length; i++) {
-                if (i == 0) {
-                    paramToPrepare += "?";
-                } else {
-                    paramToPrepare += ", ?";
-                }
-            }
-            long res = databaseConfig
-                    .executeUpdate(
-                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + paramToPrepare + ")",
-                            getUserParams(user).toArray(new QueryParam[0]));
+            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]),
+                    tableName, params);
             if (res > 0) {
-                User resUser = user;
-                resUser.setId(res);
-                return resUser;
+                User resData = data;
+                resData.setId(res);
+                return resData;
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -85,27 +75,12 @@ public class UserDao implements DaoBase<User> {
     }
 
     @Override
-    public User update(User user) {
+    public User update(User data) {
         try {
-            String paramsSplited[] = params.split(", ");
-            ArrayList<QueryParam> valuesSplited = getUserParams(user);
-            String query = "";
-            query += "UPDATE " + tableName + " SET ";
-            for (int i = 0; i < paramsSplited.length; i++) {
-                if (i == 0) {
-                    query += paramsSplited[i] + " = ?";
-                } else {
-                    query += ", " + paramsSplited[i] + " = ?";
-                }
-            }
-            valuesSplited.add(new QueryParam("long", user.getId()));
-            query += " WHERE id = ? ";
-            long res = databaseConfig
-                    .executeUpdate(query, valuesSplited.toArray(new QueryParam[0]));
+            long res = new DaoUtils().update(databaseConfig, getDataParams(data), tableName, params,
+                    data.getId());
             if (res > 0) {
-                User resUser = user;
-                resUser.setId(res);
-                return resUser;
+                return findById(data.getId());
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -116,8 +91,7 @@ public class UserDao implements DaoBase<User> {
     @Override
     public boolean delete(Long id) {
         try {
-            long res = databaseConfig
-                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
+            long res = new DaoUtils().detele(databaseConfig, tableName, id);
             return res > 0;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -127,10 +101,9 @@ public class UserDao implements DaoBase<User> {
 
     public User findByEmail(String email) {
         try {
-            ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = ?", new QueryParam("string", email));
+            ResultSet res = new DaoUtils().getByStringColumn(databaseConfig, tableName, "email", email);
             if (res.next()) {
-                return getUser(res);
+                return getData(res);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -141,10 +114,9 @@ public class UserDao implements DaoBase<User> {
     @Override
     public User findById(Long id) {
         try {
-            ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
+            ResultSet res = new DaoUtils().getByID(databaseConfig, tableName, id);
             if (res.next()) {
-                return getUser(res);
+                return getData(res);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());

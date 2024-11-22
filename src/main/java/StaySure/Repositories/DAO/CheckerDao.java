@@ -19,22 +19,22 @@ public class CheckerDao implements DaoBase<Checker> {
     private final String tableName = "checkers";
     private final String params = "name, last_name, phone, email, identification_number, birth_date, start_to_checker, password";
 
-    private ArrayList<QueryParam> getUserParams(Checker checker) {
+    private ArrayList<QueryParam> getDataParams(Checker data) {
         ArrayList<QueryParam> res = new ArrayList<>();
 
-        res.add(new QueryParam("string", checker.getName()));
-        res.add(new QueryParam("string", checker.getLastName()));
-        res.add(new QueryParam("long", checker.getPhone()));
-        res.add(new QueryParam("string", checker.getEmail()));
-        res.add(new QueryParam("int", checker.getIdentificationNumber()));
-        res.add(new QueryParam("date", checker.getBirthDate()));
-        res.add(new QueryParam("date", checker.getStartToChecker()));
-        res.add(new QueryParam("string", checker.getPassword()));
+        res.add(new QueryParam("string", data.getName()));
+        res.add(new QueryParam("string", data.getLastName()));
+        res.add(new QueryParam("long", data.getPhone()));
+        res.add(new QueryParam("string", data.getEmail()));
+        res.add(new QueryParam("int", data.getIdentificationNumber()));
+        res.add(new QueryParam("date", data.getBirthDate()));
+        res.add(new QueryParam("date", data.getStartToChecker()));
+        res.add(new QueryParam("string", data.getPassword()));
 
         return res;
     }
 
-    private Checker getChecker(ResultSet res) {
+    private Checker getData(ResultSet res) {
         try {
             return CheckerFactory.createChecker(
                     res.getLong("id"),
@@ -57,25 +57,15 @@ public class CheckerDao implements DaoBase<Checker> {
     }
 
     @Override
-    public Checker save(Checker checker) {
+    public Checker save(Checker data) {
 
         try {
-            String paramToPrepare = "";
-            for (int i = 0; i < params.split(", ").length; i++) {
-                if (i == 0) {
-                    paramToPrepare += "?";
-                } else {
-                    paramToPrepare += ", ?";
-                }
-            }
-            long res = databaseConfig
-                    .executeUpdate(
-                            "INSERT INTO " + tableName + " (" + params + ") VALUES (" + paramToPrepare + ")",
-                            getUserParams(checker).toArray(new QueryParam[0]));
+            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]),
+                    tableName, params);
             if (res > 0) {
-                Checker resUser = checker;
-                resUser.setId(res);
-                return resUser;
+                Checker resData = data;
+                resData.setId(res);
+                return resData;
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -85,25 +75,12 @@ public class CheckerDao implements DaoBase<Checker> {
     }
 
     @Override
-    public Checker update(Checker checker) {
+    public Checker update(Checker data) {
         try {
-            String paramsSplited[] = params.split(", ");
-            ArrayList<QueryParam> valuesSplited = getUserParams(checker);
-            String query = "";
-            query += "UPDATE " + tableName + " SET ";
-            for (int i = 0; i < paramsSplited.length; i++) {
-                if (i == 0) {
-                    query += paramsSplited[i] + " = ?";
-                } else {
-                    query += ", " + paramsSplited[i] + " = ?";
-                }
-            }
-            valuesSplited.add(new QueryParam("long", checker.getId()));
-            query += " WHERE id = ? ";
-            long res = databaseConfig
-                    .executeUpdate(query, valuesSplited.toArray(new QueryParam[0]));
+            long res = new DaoUtils().update(databaseConfig, getDataParams(data), tableName, params,
+                    data.getId());
             if (res > 0) {
-                return checker;
+                return findById(data.getId());
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -114,8 +91,7 @@ public class CheckerDao implements DaoBase<Checker> {
     @Override
     public boolean delete(Long id) {
         try {
-            long res = databaseConfig
-                    .executeUpdate("DELETE FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
+            long res = new DaoUtils().detele(databaseConfig, tableName, id);
             return res > 0;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -125,10 +101,9 @@ public class CheckerDao implements DaoBase<Checker> {
 
     public Checker findByEmail(String email) {
         try {
-            ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE email = ?", new QueryParam("string", email));
+            ResultSet res = new DaoUtils().getByStringColumn(databaseConfig, tableName, "email", email);
             if (res.next()) {
-                return getChecker(res);
+                return getData(res);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -139,10 +114,9 @@ public class CheckerDao implements DaoBase<Checker> {
     @Override
     public Checker findById(Long id) {
         try {
-            ResultSet res = databaseConfig
-                    .executeQuery("SELECT * FROM " + tableName + " WHERE id = ?", new QueryParam("long", id));
+            ResultSet res = new DaoUtils().getByID(databaseConfig, tableName, id);
             if (res.next()) {
-                return getChecker(res);
+                return getData(res);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
