@@ -70,7 +70,7 @@ public class DatabaseConfig {
      */
     public ResultSet executeQuery(String query, QueryParam... params) throws SQLException {
         PreparedStatement statement = getInstance(this).prepareStatement(query);
-        prepareStatement(statement, params);
+        prepareStatement(statement, params);        
         System.out.println("Ejecutando consulta: " + statement.toString());
         return statement.executeQuery();
     }

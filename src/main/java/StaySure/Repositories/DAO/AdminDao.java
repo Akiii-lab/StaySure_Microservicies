@@ -62,8 +62,8 @@ public class AdminDao implements DaoBase<Admin> {
     public Admin save(Admin data) {
 
         try {
-            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]),
-                    tableName, params);
+            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]), params,
+                    tableName);
             if (res > 0) {
                 Admin resData = data;
                 resData.setId(res);
@@ -79,7 +79,7 @@ public class AdminDao implements DaoBase<Admin> {
     @Override
     public Admin update(Admin data) {
         try {
-            long res = new DaoUtils().update(databaseConfig, getDataParams(data), tableName, params,
+            long res = new DaoUtils().update(databaseConfig, getDataParams(data), params, tableName,
                     data.getId());
             if (res > 0) {
                 return findById(data.getId());

@@ -60,8 +60,8 @@ public class CheckerDao implements DaoBase<Checker> {
     public Checker save(Checker data) {
 
         try {
-            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]),
-                    tableName, params);
+            long res = new DaoUtils().save(databaseConfig, getDataParams(data).toArray(new QueryParam[0]), params,
+                    tableName);
             if (res > 0) {
                 Checker resData = data;
                 resData.setId(res);
@@ -77,7 +77,7 @@ public class CheckerDao implements DaoBase<Checker> {
     @Override
     public Checker update(Checker data) {
         try {
-            long res = new DaoUtils().update(databaseConfig, getDataParams(data), tableName, params,
+            long res = new DaoUtils().update(databaseConfig, getDataParams(data), params, tableName,
                     data.getId());
             if (res > 0) {
                 return findById(data.getId());
